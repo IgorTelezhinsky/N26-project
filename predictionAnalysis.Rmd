@@ -1,0 +1,171 @@
+---
+title: "Number26 Project: Prediction Analysis."
+author: "Igor Telezhinsky"
+date: 2016-02-24
+output: 
+  html_document: 
+    keep_md: yes
+---
+```{r echo=FALSE, warning=FALSE, message=FALSE}
+setwd("~/Projects/JobTests/number26")
+library(caret)        #machine learning
+library(kernlab)      #svm
+library(randomForest) #rf
+library(gbm)          #gbm
+library(nnet)         #nnet
+library(mgcv)         #gam
+library(doMC)         #multi-core
+registerDoMC(cores = 4)
+source('prepareData.R')
+source('predictionAnalysis.R')
+```
+# Context
+
+Task 2 can be solved with the classification analysis - a subject of supervised learning. There are numerous algorithms available. I will stop here at several most frequently used: *random forest*, *bossted decision trees*, *neural network*, and *support vector machines* with Gaussian kernel. I will also probe *general additive model* to combine other models into ensemble of models for the final model.
+
+# Analysis
+
+I will use here *caret* package. I implemented simple ensemble of several models defined by *method* parameter in my function *buildModel()*. Each of the methods is fitted by *train()* function many times to bootstrapped data during tuning of each method specific parameters. In addition, I use 8-fold cross-validation for the train control. Otherwise standard *train()* parameters are used (see *predictionAnalysis.R* file.)
+
+## Loading and transforming data
+
+```{r load_data, cache=T}
+dt <- readDT()
+df <- convert(dt,operations = c("numNatId","scaleTimes","logNatId"))
+```
+## Model selection: predicted outcome *signupCompleted*
+
+Preparing data of training, cross-validating, and final model testing data sets for the prediction of *signupCompleted* variable:
+```{r no_cluster_info, cache=T}
+dlSign <- prepTrainData(df,outcome="signupCompleted")
+```
+
+### The data set w/o clustering information
+
+The accuracy of each model in the *methods* parameter and the accuracy of the final combined model is given by 4 numbers following each calculation.
+
+```{r no_cluster_info_m1, cache=T, warning=FALSE, message=FALSE}
+modelSign1<-buildModel(dlSign, methods=c("rf","gbm","nnet"),
+                              combineMethod="rf", outcome="signupCompleted")
+modelSign1$acc
+```
+
+```{r no_cluster_info_m2, cache=T, warning=FALSE, message=FALSE}
+modelSign2<-buildModel(dlSign, methods=c("rf","gbm","nnet"),
+                              combineMethod="nnet", outcome="signupCompleted")
+modelSign2$acc
+```
+
+```{r no_cluster_info_m3, cache=T, warning=FALSE, message=FALSE}
+modelSign3<-buildModel(dlSign, methods=c("rf","gbm","nnet"),
+                              combineMethod="svmRadial", outcome="signupCompleted")
+modelSign3$acc
+```
+
+```{r no_cluster_info_m4, cache=T, warning=FALSE, message=FALSE}
+modelSign4<-buildModel(dlSign, methods=c("rf","gbm","nnet"),
+                              combineMethod="gam", outcome="signupCompleted")
+modelSign4$acc
+```
+
+It's seen that models 1,2,3 are equally good. I prefer to stop at model 2. The method "gbm" failed to combine models. Adding another method to the list affects the fourth digit after coma in accuracy of combined model.
+
+### Adding clustering information
+
+Let's  add cluster information and see if it helps 
+
+```{r add_cluster, cache=T}
+dfc<-bindClusterId(df)
+```
+
+Preparing data for training, cross-validating, and testing prediction of *signupCompleted* variable given cluster ingormation
+```{r cluster_info, cache=T}
+dlSignC <- prepTrainData(dfc,outcome="signupCompleted")
+```
+
+```{r cluster_info_m1, cache=T, warning=FALSE, message=FALSE}
+modelSignC1<-buildModel(dlSignC, methods=c("rf","gbm","nnet"),
+                              combineMethod="rf", outcome="signupCompleted")
+modelSignC1$acc
+```
+
+```{r cluster_info_m2, cache=T, warning=FALSE, message=FALSE}
+modelSignC2<-buildModel(dlSignC, methods=c("rf","gbm","nnet"),
+                              combineMethod="nnet", outcome="signupCompleted")
+modelSignC2$acc
+```
+
+```{r cluster_info_m3, cache=T, warning=FALSE, message=FALSE}
+modelSignC3<-buildModel(dlSignC, methods=c("rf","gbm","nnet"),
+                              combineMethod="svmRadial", outcome="signupCompleted")
+modelSignC3$acc
+```
+
+```{r cluster_info_m4, cache=T, warning=FALSE, message=FALSE}
+modelSignC4<-buildModel(dlSignC, methods=c("rf","gbm","nnet"),
+                              combineMethod="gam", outcome="signupCompleted")
+modelSignC4$acc
+```
+
+Well, the clustering information improves a bit the prediction. The improvement, however, is not large, so I will *not* use the clustering information. Besides, if the clustering information in your data set is absent, the only way to create it is to train/build a model based on my classified data set to predict the *clusterId* in your test data set. Given the non-zero error of any prediction, the clustering information in this case may be missleading.
+
+# Verifying model. Out of sample (OOS) error.
+
+To estimate out of sample error we will perform prediction on the reserved testing set for the final model. It was not used during model building and selection process.
+
+```{r}
+#note the testing set should NOT contain predicted variable
+testing <- dlSign$fmTest
+testing$signupCompleted <- NULL
+prediction<-predictOutcome(modelSign2,testing)
+```
+
+Let's estimate errors of each prediction model and the combined. Note, that I stopped at combined model, so I must not change our choice even if by some circumstances it's error will be larger.
+
+```{r}
+#rf
+confusionMatrix(dlSign$fmTest$signupCompleted,prediction$rf)$overall['Accuracy']
+
+#gbm
+confusionMatrix(dlSign$fmTest$signupCompleted,prediction$gbm)$overall['Accuracy']
+
+#neural network
+confusionMatrix(dlSign$fmTest$signupCompleted,prediction$nnet)$overall['Accuracy']
+
+#combined
+confusionMatrix(dlSign$fmTest$signupCompleted,prediction$Combined)$overall['Accuracy']
+```
+
+The OOS error is not increased, which is good and means we had no overfitting. It's even decreased a bit, but this is probably by chance.
+
+# Final remarks
+
+To test the model prediction your test data needs to be prepared in the same manner as my training set, i.e., include all transformations made by me to the data. I prepared a function that would do it. The condition is that *your test file* has the same columns and their names as *my training file*. To test the model do the following:  
+
+1. Train my model as I did above:  
+```{r example_train, eval=FALSE}
+dt <- readDT(myTrainFile)
+df <- convert(dt,operations = c("numNatId","scaleTimes","logNatId"))
+dl <- prepTrainData(df,outcome="signupCompleted")
+model <- buildModel(dl, methods=c("rf","gbm","nnet"),
+                           combineMethod="nnet", outcome="signupCompleted")
+```
+2. Prepare *your testing* data set:  
+```{r example_prep, eval=FALSE}
+testingData<-prepTestData(myTrainFile,yourTestFile) #must be in identical format
+```
+3. Perform prediction
+```{r example_pred, eval=FALSE}
+#note the testing set should NOT contain predicted variable
+testing <- testingData
+testing$signupCompleted <- NULL
+prediction<-predictOutcome(model,testing)
+```
+4. Make model evaluation as you think is appropriate. *prediction* is a list of models predictions, including combined model prediction retrieved as:
+```{r eval=FALSE}
+prediction$Combined
+```
+
+
+
+
