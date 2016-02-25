@@ -60,7 +60,6 @@ bindClusterId<-function(df)
 prepTrainData<-function(df,outcome="signupCompleted")
 {
     set.seed(1234)
-    
     #converting some variables to factors
     ycol <- which(colnames(df) == outcome)
     df[,ycol]<-as.factor(df[,ycol])
@@ -119,4 +118,5 @@ prepTestData<-function(fileTrain,fileTest,outcome="signupCompleted")
         ccol <- which(colnames(testDF)== "clusterId")
         if(length(ccol) != 0) testDF[,ccol]<-as.factor(testDF[,ccol])
     }
+    testDF
 }
