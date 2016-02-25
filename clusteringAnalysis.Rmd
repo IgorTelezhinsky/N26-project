@@ -22,26 +22,26 @@ Task 1 can be solved with the clustering analysis - a subject of unsupervised le
 
 ## Data selection
 
-Original data consist of 10 variables. To perform clustering analysis we need evaluate distances, therefore *character*/categorical variables need to be treated in numeric way. I need to select which ones to keep and tranform and which ones leav out. To recognize patterns in user data base, I think that followinf variables will not be needed:  
+Original data consist of 10 variables. To perform clustering analysis we need evaluate distances, therefore *character*/categorical variables need to be treated in numeric way. I need to select which ones to keep and transform and which ones leave out. To recognize patterns in user data base, I think that following variables will not be needed:  
 1. *id*, which is a unique hash  
-2. *bithPlace*, which in many cases entered not in a specific way, i.e., various spellings of one place, or countries and towns mixed together  
+2. *birthPlace*, which in many cases entered not in a specific way, i.e., various spellings of one place, or countries and towns mixed together  
 3. *lastName* - again mostly unique  
 4. *passportType* - has a lot of missing values and again entered not in a specific way, i.e., different names for the same kind of document  
 The variable *nationality* is a useful one and will be kept and transformed to numeric type.
 
 ## Data Transformation and Exploration
 
-The time stamps in the data set are given in unix date format (number of miliseconds elapsed from 1970-01-01) and therefore represent very large integers. They need to be scaled (standardized) in order not to dominate the variance in the data set. The variable *nationality* can be transformed to *nationalityId*: there are 120 nationalities so each can be assigned an integer value. There are two ways to do it: based on *alphabetical* sorting and based on *frequency of occurance* in the data set. During exploratory analysis it was found that based on *frequency of occurance* id assignment shows better/more stable results. After assignment of integer values, we also need to tranform this variable because it spans a wide range of values compared to other variable and it's distribution is very skewed. There are several ways I tried:  
+The time stamps in the data set are given in UNIX date format (number of milliseconds elapsed from 1970-01-01) and therefore represent very large integers. They need to be scaled (standardized) in order not to dominate the variance in the data set. The variable *nationality* can be transformed to *nationalityId*: there are 120 nationalities so each can be assigned an integer value. There are two ways to do it: based on *alphabetical* sorting and based on *frequency of occurance* in the data set. During exploratory analysis it was found that based on *frequency of occurance* id assignment shows better/more stable results. After assignment of integer values, we also need to transform this variable because it spans a wide range of values compared to other variable and it's distribution is very skewed. There are several ways I tried:  
 1. scaling (standardizing)  
 2. log transformation  
-3. log transformation + scaling (standardizing)
+3. log transformation + scaling (standardizing)  
 4. Box Cox transformation  
 5. Box Cox transformation + scaling (standardizing)  
 Methods 4(5) gave same result as 2(3), therefore I stayed with method 2: this way the span of values reduces from 1-120 to 0-~5, which is fine.
 
 Finally, we can scale(standardize) not only time stamps, but also all variables. This was tried as well.
 
-With all possible transformations described, the exploratory analysis similar to what is described below was performed and the final tranformations were selected as follows:  
+With all possible transformations described, the exploratory analysis similar to what is described below was performed and the final transformations were selected as follows:  
 
 1. Scale (standardize) time variables
 2. Assign integer id to *nationality* based on *frequency of occurance*  
@@ -59,7 +59,7 @@ df_nIdl<-convert(dt,operations = c("numNatId","scaleTimes","logNatId"))
 Here I perform the analysis on the data that has 6 variables: 3 scaled (standardized) time stamp columns, gender, signupComplete and log transformed *nationlalityId* variable. I will call this data set *transformed* in subsequent analysis as opposed to PCs data set created below. 
 
 ## Principal Components (PCs) Analysis
-After looking at *tranformed* data I decided to perform PCA to understand how many PCs to select and see if there are any vivid clusterings in PCs space. PCs may help in identifying clusters as they reduce data dimensionality and make data more comprehensible.
+After looking at *tranformed* data I decided to perform PCA to understand how many PCs to select and see if there are any vivid clustering in PCs space. PCs may help in identifying clusters as they reduce data dimensionality and make data more comprehensible.
 
 ```{r analyze_pcs, cache=T, warning=F}
 analysePC(df_nIdl)
@@ -69,7 +69,7 @@ df_nIdl_pc<-pcdf(df_nIdl)
 I see that the first 3 PCs explain 86% and first 4 PCs explain 93% of variance. In the following analysis of the expected number of clusters I will choose in most cases 4 PCs, however I analysed also cases including from 3 up to all 6 PCs during exploratory analysis phase.   
 
 ## Number of cluster analysis
-Here I perform the analysis to understand the optimal number of clusters within data set. I will perform the analysis on the PCs data set taking just components explaining >85% of variance and also on the *transformed* dataset chosen for the current analysis.
+Here I perform the analysis to understand the optimal number of clusters within data set. I will perform the analysis on the PCs data set taking just components explaining >85% of variance and also on the *transformed* data set chosen for the current analysis.
 
 ## K-means "elbow".
 
@@ -94,7 +94,7 @@ This plot also suggest ~5 clusters.
 
 ## CLARA's silhuoette
 
-This is from wiki: "The silhouette of a datum is a measure of how closely it is matched to data within its cluster and how loosely it is matched to data of the neighbouring cluster". I use here k-medoid method based on PAM but used for large datsets and called CLARA (PAM was too slow on my computer). Due to random samplings out of data, it is not deterministic (I do not set seed because I am interested in different outcomes)
+This is from wiki: "The silhouette of a datum is a measure of how closely it is matched to data within its cluster and how loosely it is matched to data of the neighboring cluster". I use here k-medoid method based on PAM but used for large data sets and called CLARA (PAM was too slow on my computer). Due to random samplings out of data, it is not deterministic (I do not set seed because I am interested in different outcomes)
 
 ### PCs data set:
 
@@ -183,7 +183,7 @@ plot(df_nIdl, col=kmCltrd$clust, pch=16)
 
 ### Transformed data set: classes from PCs
 
-Note: class colors do not coincide, but clusterisation *does* coinicide, suggesting that PCs did not worse job than full transformed data set. I will use, however, for the further analysis classes obtained from the full transformed data set.
+Note: class colors do not coincide, but clusterisation *does* coincide, suggesting that PCs did not worse job than full transformed data set. I will use, however, for the further analysis classes obtained from the full transformed data set.
 
 ```{r make_plot_full_clpcs, cache=T, warning=F}
 palette(alpha(brewer.pal(9,'Set1'), 0.5))
@@ -202,7 +202,7 @@ bindClusterId<-function(df)
 
 # Final remarks
 
-In order *bindClusterId()* function to work, all the required transformations to the data set must be made beforehand. You can add ClusterId to my training data set with the following code.
+In order *bindClusterId()* function to work, all the required transformations to the data set must be made beforehand. You can add *clusterId* to my training data set with the following code.
 
 ```{r example_addCluster, eval=FALSE}
 dt <- readDT()

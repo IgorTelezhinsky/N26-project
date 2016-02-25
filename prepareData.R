@@ -90,7 +90,7 @@ prepTrainData<-function(df,outcome="signupCompleted")
 #as my train set, i.e., same columns and their names.
 #the test data here is prepared to have exactly same transformations
 #that were used for the learning
-prepTestData<-function(fileTrain,fileTest)
+prepTestData<-function(fileTrain,fileTest,outcome="signupCompleted")
 {
 #first read training data set
     trainDT <- readDT(fileTrain)
@@ -106,4 +106,17 @@ prepTestData<-function(fileTrain,fileTest)
     testDT  <- merge(testDT,trainLS$rank,by="nationality"); testDT[,c("nationality","N"):=NULL]
 #transform times and make log transform to nationalityId
     testDF  <- convert(testDT,operations = c("scaleTimes","logNatId"))
+    
+#converting some variables to factors
+    ycol <- which(colnames(testDF) == outcome)
+    testDF[,ycol]<-as.factor(testDF[,ycol])
+    
+    gcol <- which(colnames(testDF) == "gender")
+    testDF[,gcol]<-as.factor(testDF[,gcol])
+    
+    if(outcome != "clusterId")
+    {
+        ccol <- which(colnames(testDF)== "clusterId")
+        if(length(ccol) != 0) testDF[,ccol]<-as.factor(testDF[,ccol])
+    }
 }

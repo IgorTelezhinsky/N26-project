@@ -4,7 +4,7 @@ Igor Telezhinsky
 
 # Context
 
-Task 2 can be solved with the classification analysis - a subject of supervised learning. There are numerous algorithms available. I will stop here at several most frequently used: *random forest*, *bossted decision trees*, *neural network*, and *support vector machines* with Gaussian kernel. I will also probe *general additive model* to combine other models into ensemble of models for the final model.
+Task 2 can be solved with the classification analysis - a subject of supervised learning. There are numerous algorithms available. I will stop here at several most frequently used: *random forest*, *boosted decision trees*, *neural network*, and *support vector machines* with Gaussian kernel. I will also probe *general additive model* to combine other models into ensemble of models for the final model.
 
 # Analysis
 
@@ -91,7 +91,7 @@ Let's  add cluster information and see if it helps
 dfc<-bindClusterId(df)
 ```
 
-Preparing data for training, cross-validating, and testing prediction of *signupCompleted* variable given cluster ingormation
+Preparing data for training, cross-validating, and testing prediction of *signupCompleted* variable given cluster information
 
 ```r
 dlSignC <- prepTrainData(dfc,outcome="signupCompleted")
@@ -148,7 +148,7 @@ modelSignC4$acc
 ## [1] 0.9401786 0.8629464 0.9428571 0.9424107
 ```
 
-Well, the clustering information improves a bit the prediction. The improvement, however, is not large, so I will *not* use the clustering information. Besides, if the clustering information in your data set is absent, the only way to create it is to train/build a model based on my classified data set to predict the *clusterId* in your test data set. Given the non-zero error of any prediction, the clustering information in this case may be missleading.
+Well, the clustering information improves a bit the prediction. The improvement, however, is not large, so I will *not* use the clustering information. Besides, if the clustering information in your data set is absent, the only way to create it is to train/build a model based on my classified data set to predict the *clusterId* in your test data set. Given the non-zero error of any prediction, the clustering information in this case may be misleading.
 
 # Verifying model. Out of sample (OOS) error.
 
@@ -205,7 +205,7 @@ confusionMatrix(dlSign$fmTest$signupCompleted,prediction$Combined)$overall['Accu
 ##   0.9525
 ```
 
-The OOS error is not increased, which is good and means we had no overfitting. It's even decreased a bit, but this is probably by chance.
+The OOS error is not increased, which is good and means we had no over fitting. It's even decreased a bit, but this is probably by chance.
 
 # Final remarks
 
@@ -223,7 +223,8 @@ model <- buildModel(dl, methods=c("rf","gbm","nnet"),
 2. Prepare *your testing* data set:  
 
 ```r
-testingData<-prepTestData(myTrainFile,yourTestFile) #must be in identical format
+#data files must be in identical format
+testingData<-prepTestData(myTrainFile,yourTestFile,outcome="signupCompleted")
 ```
 3. Perform prediction
 

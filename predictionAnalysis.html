@@ -70,7 +70,7 @@ img {
 
 <div id="context" class="section level1">
 <h1>Context</h1>
-<p>Task 2 can be solved with the classification analysis - a subject of supervised learning. There are numerous algorithms available. I will stop here at several most frequently used: <em>random forest</em>, <em>bossted decision trees</em>, <em>neural network</em>, and <em>support vector machines</em> with Gaussian kernel. I will also probe <em>general additive model</em> to combine other models into ensemble of models for the final model.</p>
+<p>Task 2 can be solved with the classification analysis - a subject of supervised learning. There are numerous algorithms available. I will stop here at several most frequently used: <em>random forest</em>, <em>boosted decision trees</em>, <em>neural network</em>, and <em>support vector machines</em> with Gaussian kernel. I will also probe <em>general additive model</em> to combine other models into ensemble of models for the final model.</p>
 </div>
 <div id="analysis" class="section level1">
 <h1>Analysis</h1>
@@ -110,7 +110,7 @@ modelSign4$acc</code></pre>
 <h3>Adding clustering information</h3>
 <p>Let’s add cluster information and see if it helps</p>
 <pre class="r"><code>dfc&lt;-bindClusterId(df)</code></pre>
-<p>Preparing data for training, cross-validating, and testing prediction of <em>signupCompleted</em> variable given cluster ingormation</p>
+<p>Preparing data for training, cross-validating, and testing prediction of <em>signupCompleted</em> variable given cluster information</p>
 <pre class="r"><code>dlSignC &lt;- prepTrainData(dfc,outcome=&quot;signupCompleted&quot;)</code></pre>
 <pre class="r"><code>modelSignC1&lt;-buildModel(dlSignC, methods=c(&quot;rf&quot;,&quot;gbm&quot;,&quot;nnet&quot;),
                               combineMethod=&quot;rf&quot;, outcome=&quot;signupCompleted&quot;)</code></pre>
@@ -129,7 +129,7 @@ modelSignC3$acc</code></pre>
                               combineMethod=&quot;gam&quot;, outcome=&quot;signupCompleted&quot;)
 modelSignC4$acc</code></pre>
 <pre><code>## [1] 0.9401786 0.8629464 0.9428571 0.9424107</code></pre>
-<p>Well, the clustering information improves a bit the prediction. The improvement, however, is not large, so I will <em>not</em> use the clustering information. Besides, if the clustering information in your data set is absent, the only way to create it is to train/build a model based on my classified data set to predict the <em>clusterId</em> in your test data set. Given the non-zero error of any prediction, the clustering information in this case may be missleading.</p>
+<p>Well, the clustering information improves a bit the prediction. The improvement, however, is not large, so I will <em>not</em> use the clustering information. Besides, if the clustering information in your data set is absent, the only way to create it is to train/build a model based on my classified data set to predict the <em>clusterId</em> in your test data set. Given the non-zero error of any prediction, the clustering information in this case may be misleading.</p>
 </div>
 </div>
 </div>
@@ -157,7 +157,7 @@ confusionMatrix(dlSign$fmTest$signupCompleted,prediction$nnet)$overall['Accuracy
 confusionMatrix(dlSign$fmTest$signupCompleted,prediction$Combined)$overall['Accuracy']</code></pre>
 <pre><code>## Accuracy 
 ##   0.9525</code></pre>
-<p>The OOS error is not increased, which is good and means we had no overfitting. It’s even decreased a bit, but this is probably by chance.</p>
+<p>The OOS error is not increased, which is good and means we had no over fitting. It’s even decreased a bit, but this is probably by chance.</p>
 </div>
 <div id="final-remarks" class="section level1">
 <h1>Final remarks</h1>
@@ -173,7 +173,8 @@ model &lt;- buildModel(dl, methods=c(&quot;rf&quot;,&quot;gbm&quot;,&quot;nnet&q
 <ol start="2" style="list-style-type: decimal">
 <li>Prepare <em>your testing</em> data set:</li>
 </ol>
-<pre class="r"><code>testingData&lt;-prepTestData(myTrainFile,yourTestFile) #must be in identical format</code></pre>
+<pre class="r"><code>#data files must be in identical format
+testingData&lt;-prepTestData(myTrainFile,yourTestFile,outcome=&quot;signupCompleted&quot;)</code></pre>
 <ol start="3" style="list-style-type: decimal">
 <li>Perform prediction</li>
 </ol>
